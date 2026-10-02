@@ -1,0 +1,33 @@
+{
+ "name": "منصة علوم الطبيعة والحياة — التعليم المتوسط 2026/2027",
+ "short_name": "علوم الطبيعة",
+ "description": "منصة الأستاذة قسول إيمان لعلوم الطبيعة والحياة: منصة للأستاذ ومنصة للمتعلم.",
+ "lang": "ar",
+ "dir": "rtl",
+ "start_url": "./index.html",
+ "scope": "./",
+ "display": "standalone",
+ "orientation": "portrait",
+ "background_color": "#061230",
+ "theme_color": "#1D5BD6",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}

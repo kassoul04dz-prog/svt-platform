@@ -1,0 +1,9 @@
+{
+  "name": "svt-platform",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "description": "منصة علوم الطبيعة والحياة — التعليم المتوسط 2026/2027",
+  "engines": { "node": ">=18" },
+  "dependencies": { "@netlify/blobs": "^8.1.0" }
+}

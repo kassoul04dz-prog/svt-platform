@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>منصة علوم الطبيعة والحياة — التعليم المتوسط 2026/2027</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1D5BD6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="علوم الطبيعة">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+[hidden]{display:none!important}
+body{font-family:"Readex Pro","Segoe UI",Tahoma,Arial,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% 35%,#0E3A8C 0,#081C4D 55%,#040C24 100%);line-height:1.7}
+#gate{min-height:100%;display:grid;place-items:center;padding:24px 16px;text-align:center}
+.box{max-width:520px;width:100%}
+.logo{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 0 22px rgba(79,227,255,.6)}
+h1{font-weight:300;font-size:clamp(30px,7vw,48px);line-height:1.25;margin:0 0 6px;text-shadow:0 0 18px rgba(79,227,255,.7),0 0 40px rgba(45,140,255,.55)}
+.by{color:#BFE3FF;margin:0 0 22px}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border-radius:12px;padding:11px 22px;font-weight:600;border:0}
+.neon{background:rgba(79,227,255,.14);color:#fff;border:1.5px solid #4FE3FF;box-shadow:0 0 14px rgba(79,227,255,.35)}
+.sun{background:#FFC83D;color:#2b2208}
+.ghost{background:transparent;color:#BFE3FF;border:1px solid rgba(191,227,255,.5)}
+button:focus-visible{outline:3px solid #FFC83D;outline-offset:2px}
+ol{text-align:start;color:#CFE8FF;margin:22px auto 0;max-width:420px;padding-inline-start:22px;font-size:14.5px}
+#msg{min-height:26px;margin:16px 0 0;color:#BFE3FF}
+#msg.bad{color:#FFB4A9}
+.note{font-size:12.5px;color:#8FB2D8;margin-top:18px}
+input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing:2px;text-align:center;padding:10px 12px;border-radius:12px;border:1.5px solid #4FE3FF;background:rgba(255,255,255,.08);color:#fff}
+.pay{background:rgba(255,255,255,.08);border:1px solid rgba(79,227,255,.35);border-radius:14px;padding:12px 16px;text-align:start;margin:12px auto;max-width:460px;font-size:14.5px;color:#E4F2FF;white-space:pre-wrap}
+#priceBox{color:#FFE28A;font-weight:600;margin:0 0 14px}
+#act h2{font-weight:600;font-size:24px;margin:0 0 6px}
+#app{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
+</style>
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+<main id="gate">
+  <div class="box">
+    <div class="logo" aria-hidden="true"><svg width="52" height="52" viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" fill="none" stroke="#1D5BD6" stroke-width="2.4"/><path d="M14 8c10 6 10 10 0 14s-10 8 0 14M30 8c-10 6-10 10 0 14s10 8 0 14" fill="none" stroke="#12915F" stroke-width="2.4" stroke-linecap="round"/><path d="M17 13h10M16 22h12M17 31h10" stroke="#1D5BD6" stroke-width="2" stroke-linecap="round"/></svg></div>
+    <h1>منصة علوم الطبيعة والحياة</h1>
+    <p class="by">التعليم المتوسط 2026/2027 · الأستاذة قسول إيمان</p>
+    <p id="priceBox" hidden></p>
+    <div class="row" id="btns" hidden>
+      <button class="sun" id="btnLogin" type="button">تسجيل الدخول</button>
+      <button class="neon" id="btnSignup" type="button">إنشاء حساب</button>
+    </div>
+    <div class="row" id="outRow" hidden><button class="ghost" id="btnOut" type="button">تسجيل الخروج</button></div>
+    <div id="act" hidden>
+      <h2>تفعيل الاشتراك السنوي</h2>
+      <p id="actWhy" class="by"></p>
+      <div class="pay" id="payInfo"></div>
+      <input class="code" id="codeIn" dir="ltr" placeholder="SVT-XXXX-XXXX-XXXX" autocomplete="off" maxlength="24" aria-label="كود التفعيل">
+      <div class="row" style="margin-top:12px"><button class="sun" id="btnAct" type="button">تفعيل</button></div>
+    </div>
+    <p id="msg" role="status" aria-live="polite">جارٍ التحقق…</p>
+    <ol id="steps" hidden>
+      <li>اضغط «إنشاء حساب» وأدخل بريدك الإلكتروني وكلمة مرور، ثم أكّد بريدك.</li>
+      <li>افتح بريدك واضغط رابط التأكيد الذي وصلك.</li>
+      <li>سجّل الدخول، ثم أدخل كود التفعيل السنوي الذي تحصل عليه بعد الدفع.</li>
+    </ol>
+    <p class="note">المحتوى محمي ولا يظهر إلا بعد تسجيل الدخول. نافذة الحساب باللغة الفرنسية.</p>
+    <noscript><p class="note">يلزم تفعيل جافاسكربت لعرض المنصة.</p></noscript>
+  </div>
+</main>
+<iframe id="app" hidden title="منصة علوم الطبيعة والحياة" allow="clipboard-write"></iframe>
+
+<script>
+(function(){
+  var gate=document.getElementById('gate'),app=document.getElementById('app'),msg=document.getElementById('msg'),
+      btns=document.getElementById('btns'),outRow=document.getElementById('outRow'),steps=document.getElementById('steps'),
+      act=document.getElementById('act'),priceBox=document.getElementById('priceBox');
+  var ni=window.netlifyIdentity,busy=false;
+
+  function say(t,bad){msg.textContent=t||'';msg.className=bad?'bad':''}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]})}
+  function hideAll(){btns.hidden=true;outRow.hidden=true;steps.hidden=true;act.hidden=true}
+  function showGate(t,bad,showOut){
+    app.hidden=true;app.removeAttribute('srcdoc');gate.hidden=false;hideAll();
+    if(showOut)outRow.hidden=false;else{btns.hidden=false;steps.hidden=false}
+    say(t,bad);
+  }
+  function payText(p){
+    p=p||{};var pr=p.prices||{};
+    if(!p.ccp&&!p.ccpName)return 'لم تُحدّد الأستاذة بيانات الدفع بعد. تواصل معها للحصول على كود التفعيل.';
+    var l=['التحويل عبر بريدي موب / CCP:'];
+    if(p.ccpName)l.push('اسم صاحب الحساب: '+p.ccpName);
+    if(p.ccp)l.push('رقم الحساب: '+p.ccp);
+    l.push('المبلغ: '+(pr.student||2500)+' دج للتلميذ · '+(pr.teacher||4000)+' دج للأستاذ (اشتراك سنوي للموسم الدراسي)');
+    if(p.contact)l.push('بعد التحويل أرسل صورة الوصل إلى: '+p.contact+' لتصلك أكواد التفعيل.');
+    if(p.seasonEnd)l.push('الاشتراك ساري حتى: '+p.seasonEnd);
+    if(p.note)l.push(p.note);
+    return l.join('\n');
+  }
+  function showActivation(j){
+    app.hidden=true;gate.hidden=false;hideAll();
+    document.getElementById('actWhy').textContent=j&&j.reason==='expired'?'انتهى اشتراكك. جدّد بكود جديد.':'حسابك مُنشأ. أدخل كود التفعيل السنوي لفتح المنصة.';
+    document.getElementById('payInfo').textContent=payText(j&&j.pay);
+    act.hidden=false;outRow.hidden=false;say('');
+  }
+  async function enter(user){
+    if(busy)return;busy=true;hideAll();say('جارٍ تحميل المنصة…');
+    try{
+      var token=await user.jwt();
+      var r=await fetch('/.netlify/functions/app',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+      if(r.status===402){showActivation(await r.json());return}
+      if(r.status===401){showGate('تعذّر التحقق من حسابك. سجّل الخروج ثم ادخل من جديد.',true,true);return}
+      if(!r.ok){var d='';try{var j0=await r.json();d=(j0.error||j0.errorMessage||'')+(j0.detail?' — '+j0.detail:'')}catch(x){}
+        showGate('تعذّر تحميل المنصة (HTTP '+r.status+(d?' · '+d:'')+'). افتح /.netlify/functions/health لمعرفة السبب.',true,true);return}
+      var html=await r.text();
+      app.srcdoc=html;app.hidden=false;gate.hidden=true;
+    }catch(e){
+      showGate('تعذّر تحميل المنصة. تحقق من الاتصال ثم أعد المحاولة.',true,true);
+    }finally{busy=false}
+  }
+  var ERR={invalid_code:'الكود غير صحيح.',code_used:'هذا الكود مستعمل من قبل.',already_active:'حسابك مفعّل بالفعل.',too_many:'محاولات كثيرة. انتظر ساعة ثم أعد المحاولة.'};
+  document.getElementById('btnAct').addEventListener('click',async function(){
+    var u=ni&&ni.currentUser();if(!u)return;
+    var code=document.getElementById('codeIn').value.trim();if(!code){say('أدخل الكود.',true);return}
+    var b=this;b.disabled=true;say('جارٍ التحقق من الكود…');
+    try{
+      var token=await u.jwt();
+      var r=await fetch('/.netlify/functions/activate',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({code:code})});
+      var j={};try{j=await r.json()}catch(e){}
+      if(r.ok||j.error==='already_active'){busy=false;await enter(u)}
+      else say(ERR[j.error]||'تعذّر التفعيل. أعد المحاولة.',true);
+    }catch(e){say('تعذّر الاتصال. أعد المحاولة.',true)}
+    b.disabled=false;
+  });
+  document.getElementById('codeIn').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnAct').click()});
+
+  /* الأسعار تظهر قبل تسجيل الدخول */
+  fetch('/.netlify/functions/activate').then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(!j||!j.pay)return;var p=j.pay.prices||{};
+    priceBox.textContent='اشتراك سنوي للموسم الدراسي: '+(p.student||2500)+' دج للتلميذ · '+(p.teacher||4000)+' دج للأستاذ';priceBox.hidden=false;
+  }).catch(function(){});
+
+  if(!ni){showGate('تعذّر تحميل أداة تسجيل الدخول. تحقق من الاتصال ثم حدّث الصفحة.',true,false);return}
+  window.svtToken=async function(){var u=ni.currentUser();return u?u.jwt():''};
+  ni.on('init',function(u){if(u)enter(u);else showGate('')});
+  ni.on('login',function(u){ni.close();enter(u)});
+  ni.on('logout',function(){showGate('تم تسجيل الخروج.')});
+  ni.on('error',function(){say('حدث خطأ في تسجيل الدخول، أعد المحاولة.',true)});
+  document.getElementById('btnLogin').addEventListener('click',function(){ni.open('login')});
+  document.getElementById('btnSignup').addEventListener('click',function(){ni.open('signup')});
+  document.getElementById('btnOut').addEventListener('click',function(){ni.logout()});
+  window.addEventListener('message',function(e){
+    if(e.source===app.contentWindow&&e.data&&e.data.svt==='logout')ni.logout();
+  });
+  ni.init({locale:'fr'});
+})();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+}
+</script>
+</body>
+</html>
