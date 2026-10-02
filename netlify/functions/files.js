@@ -6,21 +6,23 @@ const MAX_CHUNKS = 30;                    // ≈ 70MB كحد أقصى للملف
 const MAX_B64 = 4.4 * 1024 * 1024;        // حجم القطعة (base64)
 const DENY = /\.(exe|msi|bat|cmd|scr|com|vbs|js|jar|apk|dll|ps1|sh|html?|svg)$/i;
 const ID = /^[a-z0-9]{8,32}$/;
-const visible = (role, aud) => role === 'admin' || aud === 'all' || (role === 'teacher' && (aud === 't' || aud === 's')) || (role === 'student' && aud === 's');
+const visible = (role, aud, levels, lv) => role === 'admin' || (
+  (aud === 'all' || (role === 'teacher' && (aud === 't' || aud === 's')) || (role === 'student' && aud === 's')) &&
+  (!lv || (levels || []).includes(lv)));   // الملفات حسب مستوى الحساب
 
 export default C.wrap(async (req) => {
   const g = await C.requireSub(req);
   if (g.err) return g.err;
-  const role = g.ent.role;
+  const role = g.ent.role, levels = g.ent.levels;
   const files = C.store('files');
 
   if (req.method === 'GET') {
     const q = new URL(req.url).searchParams;
     const idx = (await files.get('index', { type: 'json' })) || [];
-    if (q.get('a') === 'list') return C.J(200, { files: idx.filter((m) => visible(role, m.aud)) });
+    if (q.get('a') === 'list') return C.J(200, { files: idx.filter((m) => visible(role, m.aud, levels, m.lv)) });
     if (q.get('a') === 'chunk') {
       const m = idx.find((x) => x.id === q.get('id'));
-      if (!m || !visible(role, m.aud)) return C.J(404, { error: 'not_found' });
+      if (!m || !visible(role, m.aud, levels, m.lv)) return C.J(404, { error: 'not_found' });
       const n = parseInt(q.get('n'), 10);
       if (!(n >= 0 && n < m.chunks)) return C.J(400, { error: 'bad_chunk' });
       const buf = await files.get('f/' + m.id + '/' + n, { type: 'arrayBuffer' });
@@ -62,6 +64,9 @@ export default C.wrap(async (req) => {
       type: String(m.type || '').slice(0, 100), chunks: total,
       cat: String(m.cat || 'file').slice(0, 20), week: String(m.week || '').slice(0, 12),
       lv: [0, 1, 2, 3, 4].includes(+m.lv) ? +m.lv : 0, aud: ['all', 's', 't'].includes(m.aud) ? m.aud : 'all',
+      yr: [2020, 2021, 2022, 2023, 2024, 2025, 2026].includes(+m.yr) ? +m.yr : 0,
+      term: ['1', '2', '3', 'bem'].includes(String(m.term)) ? String(m.term) : '',
+      kind: ['exam', 'solution', 'plan', 'other'].includes(m.kind) ? m.kind : '',
       at: new Date().toISOString(),
     };
     const idx = (await files.get('index', { type: 'json' })) || [];

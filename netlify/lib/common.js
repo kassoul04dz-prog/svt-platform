@@ -44,13 +44,13 @@ const cache = new Map();
 const b64json = (s) => { try { return JSON.parse(Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8')); } catch (e) { return null; } };
 
 /* يقرأ Authorization: Bearer <JWT> ويتحقق منه لدى Identity. يرجع {email,id} أو null */
-export async function authUser(req) {
+export async function authUser(req, fresh = false) {
   const m = (req.headers.get('authorization') || '').match(/^Bearer\s+(\S+)$/i);
   if (!m) return null;
   const token = m[1];
   const key = crypto.createHash('sha256').update(token).digest('hex');
   const hit = cache.get(key);
-  if (hit && hit.until > Date.now()) return hit.user;
+  if (!fresh && hit && hit.until > Date.now()) return hit.user;   // fresh=true: تجاوز الذاكرة المؤقتة (بيانات الملف الشخصي قد تتغير)
   const payload = b64json(token.split('.')[1] || '');
   if (payload && payload.exp && payload.exp * 1000 < Date.now()) return null;
 
@@ -64,7 +64,7 @@ export async function authUser(req) {
     let u = null;
     try { u = await r.json(); } catch (e) { u = null; }
     if (!u || !u.email) return null;
-    const user = { email: String(u.email).toLowerCase(), id: u.id || '' };
+    const user = { email: String(u.email).toLowerCase(), id: u.id || '', meta: (u.user_metadata && typeof u.user_metadata === 'object') ? u.user_metadata : {} };
     cache.set(key, { user, until: Math.min(Date.now() + 60000, payload && payload.exp ? payload.exp * 1000 : Date.now() + 60000) });
     if (cache.size > 500) cache.clear();
     return user;
@@ -87,13 +87,43 @@ export const pub = (s) => ({ ccpName: s.ccpName, ccp: s.ccp, contact: s.contact,
 export const expiry = (s) => new Date((s.seasonEnd || DEFAULTS.seasonEnd) + 'T23:59:59Z').toISOString();
 
 /* ---------- الاشتراك ---------- */
+export const ALL_LEVELS = [1, 2, 3, 4];
 export async function entitlement(u) {
   if (!u) return null;
-  if (isAdmin(u)) return { role: 'admin', expires: null };
+  if (isAdmin(u)) return { role: 'admin', expires: null, levels: ALL_LEVELS, profile: null };
   const s = await store('subs').get('u/' + u.email, { type: 'json' });
   if (!s) return null;
-  if (Date.parse(s.expires) < Date.now()) return { expired: true, role: s.role, expires: s.expires };
-  return { role: s.role, expires: s.expires };
+  const levels = Array.isArray(s.levels) && s.levels.length ? s.levels.map(Number).filter((n) => ALL_LEVELS.includes(n)) : ALL_LEVELS;
+  if (Date.parse(s.expires) < Date.now()) return { expired: true, role: s.role, expires: s.expires, levels, profile: s.profile || null };
+  return { role: s.role, expires: s.expires, levels, profile: s.profile || null };
+}
+
+/* ---------- بيانات التسجيل ---------- */
+export const WILAYAS = ['أدرار','الشلف','الأغواط','أم البواقي','باتنة','بجاية','بسكرة','بشار','البليدة','البويرة','تمنراست','تبسة','تلمسان','تيارت','تيزي وزو','الجزائر','الجلفة','جيجل','سطيف','سعيدة','سكيكدة','سيدي بلعباس','عنابة','قالمة','قسنطينة','المدية','مستغانم','المسيلة','معسكر','ورقلة','وهران','البيض','إليزي','برج بوعريريج','بومرداس','الطارف','تندوف','تيسمسيلت','الوادي','خنشلة','سوق أهراس','تيبازة','ميلة','عين الدفلى','النعامة','عين تموشنت','غرداية','غليزان','تيميمون','برج باجي مختار','أولاد جلال','بني عباس','عين صالح','عين قزام','تقرت','جانت','المغير','المنيعة'];
+
+/* يتحقق من الحقول الإجبارية: الاسم واللقب، الولاية، تاريخ الميلاد، المؤسسة، الصفة، والمستوى/المستويات.
+   يرجع {ok:true, profile} أو {ok:false, error, missing:[...]} */
+export function parseProfile(meta, codeRole) {
+  const m = meta || {};
+  const missing = [];
+  const name = String(m.full_name || '').trim().replace(/\s+/g, ' ');
+  if (name.length < 3 || name.length > 80) missing.push('full_name');
+  const wilaya = String(m.wilaya || '').trim();
+  if (!WILAYAS.includes(wilaya)) missing.push('wilaya');
+  const birth = String(m.birth || '').trim();
+  const bd = /^\d{4}-\d{2}-\d{2}$/.test(birth) ? new Date(birth + 'T00:00:00Z') : null;
+  if (!bd || isNaN(bd) || bd > new Date() || bd < new Date('1940-01-01T00:00:00Z')) missing.push('birth');
+  const school = String(m.school || '').trim().replace(/\s+/g, ' ');
+  if (school.length < 3 || school.length > 120) missing.push('school');
+  const role = m.role === 'teacher' ? 'teacher' : m.role === 'student' ? 'student' : '';
+  if (!role) missing.push('role');
+  let lv = m.levels;
+  if (typeof lv === 'string') lv = lv.split(/[,\s]+/);
+  lv = [...new Set((Array.isArray(lv) ? lv : [lv]).map(Number).filter((n) => ALL_LEVELS.includes(n)))].sort();
+  if (!lv.length || (role === 'student' && lv.length !== 1)) missing.push('levels');
+  if (missing.length) return { ok: false, error: 'profile_incomplete', missing };
+  if (codeRole && role !== codeRole) return { ok: false, error: 'role_mismatch', missing: ['role'] };
+  return { ok: true, profile: { name, wilaya, birth, school, levels: lv } };
 }
 
 /* ---------- الأكواد وحدود الاستعمال ---------- */

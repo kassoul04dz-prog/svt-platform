@@ -18,11 +18,11 @@
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
+html,body{min-height:100%;margin:0}
 [hidden]{display:none!important}
-body{font-family:"Readex Pro","Segoe UI",Tahoma,Arial,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% 35%,#0E3A8C 0,#081C4D 55%,#040C24 100%);line-height:1.7}
-#gate{min-height:100%;display:grid;place-items:center;padding:24px 16px;text-align:center}
-.box{max-width:520px;width:100%}
+body{font-family:"Readex Pro","Segoe UI",Tahoma,Arial,sans-serif;color:#fff;background:radial-gradient(ellipse at 50% 35%,#0E3A8C 0,#081C4D 55%,#040C24 100%) fixed;line-height:1.7}
+#gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px;text-align:center}
+.box{max-width:560px;width:100%}
 .logo{width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:#fff;display:grid;place-items:center;box-shadow:0 0 22px rgba(79,227,255,.6)}
 h1{font-weight:300;font-size:clamp(30px,7vw,48px);line-height:1.25;margin:0 0 6px;text-shadow:0 0 18px rgba(79,227,255,.7),0 0 40px rgba(45,140,255,.55)}
 .by{color:#BFE3FF;margin:0 0 22px}
@@ -31,7 +31,8 @@ button{font:inherit;cursor:pointer;border-radius:12px;padding:11px 22px;font-wei
 .neon{background:rgba(79,227,255,.14);color:#fff;border:1.5px solid #4FE3FF;box-shadow:0 0 14px rgba(79,227,255,.35)}
 .sun{background:#FFC83D;color:#2b2208}
 .ghost{background:transparent;color:#BFE3FF;border:1px solid rgba(191,227,255,.5)}
-button:focus-visible{outline:3px solid #FFC83D;outline-offset:2px}
+button[disabled]{opacity:.6;cursor:wait}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #FFC83D;outline-offset:2px}
 ol{text-align:start;color:#CFE8FF;margin:22px auto 0;max-width:420px;padding-inline-start:22px;font-size:14.5px}
 #msg{min-height:26px;margin:16px 0 0;color:#BFE3FF}
 #msg.bad{color:#FFB4A9}
@@ -39,7 +40,23 @@ ol{text-align:start;color:#CFE8FF;margin:22px auto 0;max-width:420px;padding-inl
 input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing:2px;text-align:center;padding:10px 12px;border-radius:12px;border:1.5px solid #4FE3FF;background:rgba(255,255,255,.08);color:#fff}
 .pay{background:rgba(255,255,255,.08);border:1px solid rgba(79,227,255,.35);border-radius:14px;padding:12px 16px;text-align:start;margin:12px auto;max-width:460px;font-size:14.5px;color:#E4F2FF;white-space:pre-wrap}
 #priceBox{color:#FFE28A;font-weight:600;margin:0 0 14px}
-#act h2{font-weight:600;font-size:24px;margin:0 0 6px}
+#act h2,#reg h2{font-weight:600;font-size:24px;margin:0 0 6px}
+#reg{text-align:start}
+#reg h2{text-align:center}
+.card{background:rgba(255,255,255,.07);border:1px solid rgba(79,227,255,.3);border-radius:16px;padding:18px}
+.fld{display:flex;flex-direction:column;gap:4px;margin:10px 0;font-size:14px;color:#CFE8FF}
+.fld input[type=text],.fld input:not([type]),.fld input[type=email],.fld input[type=password],.fld input[type=date],.fld select{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid rgba(191,227,255,.45);background:rgba(4,12,36,.55);color:#fff;width:100%}
+.fld select option{color:#111}
+.fld small{color:#8FB2D8}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 4px}
+.seg label{cursor:pointer;border:1.5px solid rgba(191,227,255,.45);border-radius:12px;padding:10px;text-align:center;font-weight:600;position:relative}
+.seg input,.chk input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:#FFC83D;color:#2b2208;border-color:#FFC83D}
+.seg label:has(input:focus-visible),.chk label:has(input:focus-visible){outline:3px solid #fff}
+.chk{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.chk label{border:1.5px solid rgba(191,227,255,.45);border-radius:10px;padding:6px 14px;cursor:pointer;position:relative}
+.chk label:has(input:checked){background:#4FE3FF;color:#06223a;border-color:#4FE3FF;font-weight:600}
+#regErr{color:#FFB4A9;min-height:22px;margin:8px 0 0;font-size:14px}
 #app{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff}
 </style>
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
@@ -50,12 +67,42 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
     <div class="logo" aria-hidden="true"><svg width="52" height="52" viewBox="0 0 44 44"><circle cx="22" cy="22" r="19" fill="none" stroke="#1D5BD6" stroke-width="2.4"/><path d="M14 8c10 6 10 10 0 14s-10 8 0 14M30 8c-10 6-10 10 0 14s10 8 0 14" fill="none" stroke="#12915F" stroke-width="2.4" stroke-linecap="round"/><path d="M17 13h10M16 22h12M17 31h10" stroke="#1D5BD6" stroke-width="2" stroke-linecap="round"/></svg></div>
     <h1>منصة علوم الطبيعة والحياة</h1>
     <p class="by">التعليم المتوسط 2026/2027 · الأستاذة قسول إيمان</p>
+
     <p id="priceBox" hidden></p>
     <div class="row" id="btns" hidden>
       <button class="sun" id="btnLogin" type="button">تسجيل الدخول</button>
       <button class="neon" id="btnSignup" type="button">إنشاء حساب</button>
     </div>
     <div class="row" id="outRow" hidden><button class="ghost" id="btnOut" type="button">تسجيل الخروج</button></div>
+
+    <form id="reg" class="card" hidden novalidate>
+      <h2 id="regTitle">إنشاء حساب</h2>
+      <p class="by" id="regSub" style="text-align:center;margin:0 0 6px">كل الحقول إجبارية.</p>
+      <div class="fld"><span>الصفة</span>
+        <div class="seg" role="radiogroup" aria-label="الصفة">
+          <label><input type="radio" name="role" value="student"><span>تلميذ</span></label>
+          <label><input type="radio" name="role" value="teacher"><span>أستاذ</span></label>
+        </div></div>
+      <div class="fld" id="lvStudent" hidden><label for="fLevel">المستوى الدراسي</label>
+        <select id="fLevel"><option value="">— اختر مستواك —</option><option value="1">السنة الأولى متوسط (1AM)</option><option value="2">السنة الثانية متوسط (2AM)</option><option value="3">السنة الثالثة متوسط (3AM)</option><option value="4">السنة الرابعة متوسط (4AM)</option></select>
+        <small>لن تظهر لك إلا دروس ومحتويات هذا المستوى.</small></div>
+      <div class="fld" id="lvTeacher" hidden><span>المستويات التي تدرّسها</span>
+        <div class="chk"><label><input type="checkbox" name="lvs" value="1"><span>1AM</span></label><label><input type="checkbox" name="lvs" value="2"><span>2AM</span></label><label><input type="checkbox" name="lvs" value="3"><span>3AM</span></label><label><input type="checkbox" name="lvs" value="4"><span>4AM</span></label></div>
+        <small>تظهر لك فقط واجهات المستويات التي تختارها.</small></div>
+      <div class="fld"><label for="fName">الاسم واللقب</label><input id="fName" type="text" autocomplete="name" maxlength="80"></div>
+      <div class="fld"><label for="fWilaya">الولاية</label><select id="fWilaya"></select></div>
+      <div class="fld"><label for="fBirth">تاريخ الميلاد</label><input id="fBirth" type="date" min="1940-01-01"></div>
+      <div class="fld"><label for="fSchool">المؤسسة التعليمية (المتوسطة)</label><input id="fSchool" type="text" maxlength="120" autocomplete="organization" placeholder="مثال: متوسطة …"></div>
+      <div id="credBox">
+        <div class="fld"><label for="fEmail">البريد الإلكتروني</label><input id="fEmail" type="email" dir="ltr" autocomplete="email"></div>
+        <div class="fld"><label for="fPass">كلمة المرور (8 أحرف على الأقل)</label><input id="fPass" type="password" dir="ltr" autocomplete="new-password"></div>
+        <div class="fld"><label for="fPass2">تأكيد كلمة المرور</label><input id="fPass2" type="password" dir="ltr" autocomplete="new-password"></div>
+      </div>
+      <p id="regErr" role="alert"></p>
+      <div class="row" style="margin-top:6px"><button class="sun" id="regGo" type="submit">إنشاء الحساب</button><button class="ghost" id="regBack" type="button">رجوع</button></div>
+      <p class="note" style="text-align:center">تُحفظ بياناتك لإدارة الاشتراك وتحديد مستواك فقط.</p>
+    </form>
+
     <div id="act" hidden>
       <h2>تفعيل الاشتراك السنوي</h2>
       <p id="actWhy" class="by"></p>
@@ -65,11 +112,10 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
     </div>
     <p id="msg" role="status" aria-live="polite">جارٍ التحقق…</p>
     <ol id="steps" hidden>
-      <li>اضغط «إنشاء حساب» وأدخل بريدك الإلكتروني وكلمة مرور، ثم أكّد بريدك.</li>
-      <li>افتح بريدك واضغط رابط التأكيد الذي وصلك.</li>
+      <li>اضغط «إنشاء حساب» واملأ بياناتك (الاسم، الولاية، تاريخ الميلاد، المؤسسة، الصفة، المستوى) ثم أكّد بريدك.</li>
       <li>سجّل الدخول، ثم أدخل كود التفعيل السنوي الذي تحصل عليه بعد الدفع.</li>
     </ol>
-    <p class="note">المحتوى محمي ولا يظهر إلا بعد تسجيل الدخول. نافذة الحساب باللغة الفرنسية.</p>
+    <p class="note">المحتوى محمي ولا يظهر إلا بعد تسجيل الدخول. نافذة تسجيل الدخول باللغة الفرنسية.</p>
     <noscript><p class="note">يلزم تفعيل جافاسكربت لعرض المنصة.</p></noscript>
   </div>
 </main>
@@ -77,14 +123,15 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
 
 <script>
 (function(){
-  var gate=document.getElementById('gate'),app=document.getElementById('app'),msg=document.getElementById('msg'),
-      btns=document.getElementById('btns'),outRow=document.getElementById('outRow'),steps=document.getElementById('steps'),
-      act=document.getElementById('act'),priceBox=document.getElementById('priceBox');
-  var ni=window.netlifyIdentity,busy=false;
+  var $=function(i){return document.getElementById(i)};
+  var gate=$('gate'),app=$('app'),msg=$('msg'),btns=$('btns'),outRow=$('outRow'),steps=$('steps'),act=$('act'),reg=$('reg'),priceBox=$('priceBox');
+  var ni=window.netlifyIdentity,busy=false,mode='signup',lastPay=null;
+  var WIL=['أدرار','الشلف','الأغواط','أم البواقي','باتنة','بجاية','بسكرة','بشار','البليدة','البويرة','تمنراست','تبسة','تلمسان','تيارت','تيزي وزو','الجزائر','الجلفة','جيجل','سطيف','سعيدة','سكيكدة','سيدي بلعباس','عنابة','قالمة','قسنطينة','المدية','مستغانم','المسيلة','معسكر','ورقلة','وهران','البيض','إليزي','برج بوعريريج','بومرداس','الطارف','تندوف','تيسمسيلت','الوادي','خنشلة','سوق أهراس','تيبازة','ميلة','عين الدفلى','النعامة','عين تموشنت','غرداية','غليزان','تيميمون','برج باجي مختار','أولاد جلال','بني عباس','عين صالح','عين قزام','تقرت','جانت','المغير','المنيعة'];
+  $('fWilaya').innerHTML='<option value="">— اختر الولاية —</option>'+WIL.map(function(w){return '<option>'+w+'</option>'}).join('');
+  $('fBirth').max=new Date().toISOString().slice(0,10);
 
   function say(t,bad){msg.textContent=t||'';msg.className=bad?'bad':''}
-  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]})}
-  function hideAll(){btns.hidden=true;outRow.hidden=true;steps.hidden=true;act.hidden=true}
+  function hideAll(){btns.hidden=true;outRow.hidden=true;steps.hidden=true;act.hidden=true;reg.hidden=true}
   function showGate(t,bad,showOut){
     app.hidden=true;app.removeAttribute('srcdoc');gate.hidden=false;hideAll();
     if(showOut)outRow.hidden=false;else{btns.hidden=false;steps.hidden=false}
@@ -102,10 +149,79 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
     if(p.note)l.push(p.note);
     return l.join('\n');
   }
+
+  /* ----- نموذج التسجيل / إكمال البيانات ----- */
+  function roleVal(){var r=document.querySelector('input[name=role]:checked');return r?r.value:''}
+  function syncRole(){var r=roleVal();$('lvStudent').hidden=r!=='student';$('lvTeacher').hidden=r!=='teacher'}
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=role]'),function(x){x.addEventListener('change',syncRole)});
+  function openReg(m,meta){
+    mode=m;hideAll();gate.hidden=false;reg.hidden=false;$('regErr').textContent='';
+    $('credBox').hidden=m!=='signup';
+    $('regTitle').textContent=m==='signup'?'إنشاء حساب':'أكمل بياناتك';
+    $('regSub').textContent=m==='signup'?'كل الحقول إجبارية.':'بياناتك ناقصة. أكملها للمتابعة إلى تفعيل الاشتراك.';
+    $('regGo').textContent=m==='signup'?'إنشاء الحساب':'حفظ ومتابعة';
+    say('');meta=meta||{};
+    if(meta.role){var r=document.querySelector('input[name=role][value='+meta.role+']');if(r)r.checked=true}
+    $('fName').value=meta.full_name||'';$('fBirth').value=meta.birth||'';$('fSchool').value=meta.school||'';
+    if(meta.wilaya)$('fWilaya').value=meta.wilaya;
+    var lv=[].concat(meta.levels||[]).map(Number);
+    if(lv.length){$('fLevel').value=String(lv[0]);Array.prototype.forEach.call(document.querySelectorAll('input[name=lvs]'),function(c){c.checked=lv.indexOf(+c.value)>=0})}
+    syncRole();
+  }
+  function collect(){
+    var role=roleVal(),levels=[];
+    if(role==='student'&&$('fLevel').value)levels=[+$('fLevel').value];
+    if(role==='teacher')Array.prototype.forEach.call(document.querySelectorAll('input[name=lvs]:checked'),function(c){levels.push(+c.value)});
+    return {full_name:$('fName').value.trim().replace(/\s+/g,' '),wilaya:$('fWilaya').value,birth:$('fBirth').value,school:$('fSchool').value.trim().replace(/\s+/g,' '),role:role,levels:levels};
+  }
+  function validate(d){
+    if(!d.role)return 'اختر الصفة: تلميذ أو أستاذ.';
+    if(d.role==='student'&&d.levels.length!==1)return 'اختر مستواك الدراسي.';
+    if(d.role==='teacher'&&!d.levels.length)return 'اختر مستوى واحداً على الأقل من المستويات التي تدرّسها.';
+    if(d.full_name.length<3)return 'أدخل الاسم واللقب.';
+    if(!d.wilaya)return 'اختر الولاية.';
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d.birth)||new Date(d.birth)>new Date())return 'أدخل تاريخ ميلاد صحيحاً.';
+    if(d.school.length<3)return 'أدخل اسم المؤسسة التعليمية (المتوسطة).';
+    return '';
+  }
+  var SIGNUP_ERR={422:'هذا البريد الإلكتروني مسجّل من قبل. استعمل «تسجيل الدخول».',403:'التسجيل مغلق حالياً. تواصل مع الأستاذة.',400:'تحقق من البريد الإلكتروني وكلمة المرور.'};
+  reg.addEventListener('submit',async function(e){
+    e.preventDefault();var err=$('regErr');err.textContent='';
+    var d=collect(),v=validate(d);
+    if(v){err.textContent=v;return}
+    var btn=$('regGo');
+    if(mode==='signup'){
+      var email=$('fEmail').value.trim(),p1=$('fPass').value,p2=$('fPass2').value;
+      if(!/^\S+@\S+\.\S+$/.test(email)){err.textContent='أدخل بريداً إلكترونياً صحيحاً.';return}
+      if(p1.length<8){err.textContent='كلمة المرور لا تقل عن 8 أحرف.';return}
+      if(p1!==p2){err.textContent='كلمتا المرور غير متطابقتين.';return}
+      btn.disabled=true;
+      try{
+        var r=await fetch('/.netlify/identity/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:p1,data:d})});
+        var j={};try{j=await r.json()}catch(x){}
+        if(!r.ok){err.textContent=SIGNUP_ERR[r.status]||('تعذّر إنشاء الحساب'+(j.msg?': '+j.msg:'.'));btn.disabled=false;return}
+        hideAll();btns.hidden=false;steps.hidden=false;
+        say('تم إنشاء الحساب. افتح بريدك واضغط رابط التأكيد، ثم سجّل الدخول.');
+      }catch(x){err.textContent='تعذّر الاتصال. أعد المحاولة.'}
+      btn.disabled=false;
+    }else{
+      var u=ni&&ni.currentUser();if(!u)return;btn.disabled=true;
+      try{
+        var token=await u.jwt();
+        var r2=await fetch('/.netlify/identity/user',{method:'PUT',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({data:d})});
+        if(!r2.ok){err.textContent='تعذّر حفظ البيانات. أعد المحاولة.';btn.disabled=false;return}
+        showActivation({pay:lastPay});say('حُفظت بياناتك. أدخل الكود ثم اضغط «تفعيل».');
+      }catch(x){err.textContent='تعذّر الاتصال. أعد المحاولة.'}
+      btn.disabled=false;
+    }
+  });
+  $('regBack').addEventListener('click',function(){if(mode==='profile')showActivation({pay:lastPay});else showGate('')});
+
+  /* ----- التفعيل ----- */
   function showActivation(j){
-    app.hidden=true;gate.hidden=false;hideAll();
-    document.getElementById('actWhy').textContent=j&&j.reason==='expired'?'انتهى اشتراكك. جدّد بكود جديد.':'حسابك مُنشأ. أدخل كود التفعيل السنوي لفتح المنصة.';
-    document.getElementById('payInfo').textContent=payText(j&&j.pay);
+    app.hidden=true;gate.hidden=false;hideAll();lastPay=(j&&j.pay)||lastPay;
+    $('actWhy').textContent=j&&j.reason==='expired'?'انتهى اشتراكك. جدّد بكود جديد.':'حسابك مُنشأ. أدخل كود التفعيل السنوي لفتح المنصة.';
+    $('payInfo').textContent=payText(lastPay);
     act.hidden=false;outRow.hidden=false;say('');
   }
   async function enter(user){
@@ -124,24 +240,27 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
     }finally{busy=false}
   }
   var ERR={invalid_code:'الكود غير صحيح.',code_used:'هذا الكود مستعمل من قبل.',already_active:'حسابك مفعّل بالفعل.',too_many:'محاولات كثيرة. انتظر ساعة ثم أعد المحاولة.'};
-  document.getElementById('btnAct').addEventListener('click',async function(){
+  $('btnAct').addEventListener('click',async function(){
     var u=ni&&ni.currentUser();if(!u)return;
-    var code=document.getElementById('codeIn').value.trim();if(!code){say('أدخل الكود.',true);return}
+    var code=$('codeIn').value.trim();if(!code){say('أدخل الكود.',true);return}
     var b=this;b.disabled=true;say('جارٍ التحقق من الكود…');
     try{
       var token=await u.jwt();
       var r=await fetch('/.netlify/functions/activate',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({code:code})});
       var j={};try{j=await r.json()}catch(e){}
       if(r.ok||j.error==='already_active'){busy=false;await enter(u)}
-      else say(ERR[j.error]||'تعذّر التفعيل. أعد المحاولة.',true);
+      else if(j.error==='profile_incomplete'){
+        openReg('profile',(u.user_metadata)||{});$('regErr').textContent='أكمل الحقول الإجبارية لتفعيل اشتراكك.';
+      }else if(j.error==='role_mismatch'){
+        say('هذا الكود مخصص '+(j.codeRole==='teacher'?'للأساتذة':'للتلاميذ')+'، وصفتك المسجّلة مختلفة. راجع الأستاذة.',true);
+      }else say(ERR[j.error]||'تعذّر التفعيل. أعد المحاولة.',true);
     }catch(e){say('تعذّر الاتصال. أعد المحاولة.',true)}
     b.disabled=false;
   });
-  document.getElementById('codeIn').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('btnAct').click()});
+  $('codeIn').addEventListener('keydown',function(e){if(e.key==='Enter')$('btnAct').click()});
 
-  /* الأسعار تظهر قبل تسجيل الدخول */
   fetch('/.netlify/functions/activate').then(function(r){return r.ok?r.json():null}).then(function(j){
-    if(!j||!j.pay)return;var p=j.pay.prices||{};
+    if(!j||!j.pay)return;lastPay=j.pay;var p=j.pay.prices||{};
     priceBox.textContent='اشتراك سنوي للموسم الدراسي: '+(p.student||2500)+' دج للتلميذ · '+(p.teacher||4000)+' دج للأستاذ';priceBox.hidden=false;
   }).catch(function(){});
 
@@ -151,9 +270,9 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
   ni.on('login',function(u){ni.close();enter(u)});
   ni.on('logout',function(){showGate('تم تسجيل الخروج.')});
   ni.on('error',function(){say('حدث خطأ في تسجيل الدخول، أعد المحاولة.',true)});
-  document.getElementById('btnLogin').addEventListener('click',function(){ni.open('login')});
-  document.getElementById('btnSignup').addEventListener('click',function(){ni.open('signup')});
-  document.getElementById('btnOut').addEventListener('click',function(){ni.logout()});
+  $('btnLogin').addEventListener('click',function(){ni.open('login')});
+  $('btnSignup').addEventListener('click',function(){openReg('signup')});
+  $('btnOut').addEventListener('click',function(){ni.logout()});
   window.addEventListener('message',function(e){
     if(e.source===app.contentWindow&&e.data&&e.data.svt==='logout')ni.logout();
   });

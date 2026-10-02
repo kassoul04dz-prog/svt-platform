@@ -79,9 +79,26 @@ export default C.wrap(async (req) => {
       const em = String(b.email || '').toLowerCase().trim();
       if (!/^\S+@\S+\.\S+$/.test(em)) return C.J(400, { error: 'email' });
       const s = await C.settings();
-      const rec = { email: em, role: b.role === 'teacher' ? 'teacher' : 'student', expires: C.expiry(s), code: 'manual', at: new Date().toISOString() };
+      const role = b.role === 'teacher' ? 'teacher' : 'student';
+      let lv = (Array.isArray(b.levels) ? b.levels : String(b.levels || '').split(/[,\s]+/)).map(Number).filter((n) => C.ALL_LEVELS.includes(n));
+      lv = [...new Set(lv)].sort();
+      if (!lv.length || (role === 'student' && lv.length !== 1)) return C.J(400, { error: 'levels' });
+      const rec = { email: em, role, expires: C.expiry(s), code: 'manual', at: new Date().toISOString(), levels: lv, profile: null };
       await subs.setJSON('u/' + em, rec);
       return C.J(200, { ok: true, sub: rec });
+    }
+
+    case 'setLevels': {
+      const em = String(b.email || '').toLowerCase().trim();
+      const cur = await subs.get('u/' + em, { type: 'json' });
+      if (!cur) return C.J(404, { error: 'not_found' });
+      let lv = (Array.isArray(b.levels) ? b.levels : String(b.levels || '').split(/[,\s]+/)).map(Number).filter((n) => C.ALL_LEVELS.includes(n));
+      lv = [...new Set(lv)].sort();
+      if (!lv.length || (cur.role === 'student' && lv.length !== 1)) return C.J(400, { error: 'levels' });
+      cur.levels = lv;
+      if (cur.profile) cur.profile.levels = lv;
+      await subs.setJSON('u/' + em, cur);
+      return C.J(200, { ok: true, levels: lv });
     }
 
     case 'savePub': {

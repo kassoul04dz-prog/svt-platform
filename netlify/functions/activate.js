@@ -8,7 +8,7 @@ export default C.wrap(async (req) => {
   }
   if (req.method !== 'POST') return C.J(405, { error: 'method' });
 
-  const u = await C.authUser(req);
+  const u = await C.authUser(req, true);   // بيانات حديثة: قد يكون المستخدم أكمل ملفه الشخصي للتو
   if (!u) return C.J(401, { error: 'login_required' });
   const b = await C.readJson(req);
   if (!b) return C.J(400, { error: 'bad_json' });
@@ -25,6 +25,10 @@ export default C.wrap(async (req) => {
   if (!rec || rec.revoked) return C.J(404, { error: 'invalid_code' });
   if (rec.used_by) return C.J(409, { error: 'code_used' });
 
+  // بيانات التسجيل الإجبارية (الاسم واللقب، الولاية، تاريخ الميلاد، المؤسسة، الصفة، المستوى) تُتحقق قبل حجز الكود
+  const pr = C.parseProfile(u.meta, rec.role);
+  if (!pr.ok) return C.J(pr.error === 'role_mismatch' ? 409 : 400, { error: pr.error, missing: pr.missing, codeRole: rec.role });
+
   // حجز الكود بشكل ذري (مرة واحدة فقط)
   let won = true;
   try {
@@ -37,6 +41,6 @@ export default C.wrap(async (req) => {
   const expires = C.expiry(s);
   rec.used_by = u.email; rec.used_at = new Date().toISOString();
   await codes.setJSON('c/' + code, rec);
-  await C.store('subs').setJSON('u/' + u.email, { email: u.email, role: rec.role, expires, code, at: rec.used_at });
-  return C.J(200, { ok: true, role: rec.role, expires });
+  await C.store('subs').setJSON('u/' + u.email, { email: u.email, role: rec.role, expires, code, at: rec.used_at, levels: pr.profile.levels, profile: pr.profile });
+  return C.J(200, { ok: true, role: rec.role, expires, levels: pr.profile.levels });
 });
