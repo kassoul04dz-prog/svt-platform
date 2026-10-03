@@ -73,7 +73,8 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
       <button class="sun" id="btnLogin" type="button">تسجيل الدخول</button>
       <button class="neon" id="btnSignup" type="button">إنشاء حساب</button>
     </div>
-    <div class="row" id="outRow" hidden><button class="ghost" id="btnOut" type="button">تسجيل الخروج</button></div>
+    <div class="row" id="outRow" hidden><button class="ghost" id="btnWho" type="button">تشخيص حسابي</button><button class="ghost" id="btnOut" type="button">تسجيل الخروج</button></div>
+    <pre id="whoOut" class="pay" hidden></pre>
 
     <form id="reg" class="card" hidden novalidate>
       <h2 id="regTitle">إنشاء حساب</h2>
@@ -131,7 +132,7 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
   $('fBirth').max=new Date().toISOString().slice(0,10);
 
   function say(t,bad){msg.textContent=t||'';msg.className=bad?'bad':''}
-  function hideAll(){btns.hidden=true;outRow.hidden=true;steps.hidden=true;act.hidden=true;reg.hidden=true}
+  function hideAll(){btns.hidden=true;outRow.hidden=true;steps.hidden=true;act.hidden=true;reg.hidden=true;$('whoOut').hidden=true}
   function showGate(t,bad,showOut){
     app.hidden=true;app.removeAttribute('srcdoc');gate.hidden=false;hideAll();
     if(showOut)outRow.hidden=false;else{btns.hidden=false;steps.hidden=false}
@@ -220,7 +221,8 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
   /* ----- التفعيل ----- */
   function showActivation(j){
     app.hidden=true;gate.hidden=false;hideAll();lastPay=(j&&j.pay)||lastPay;
-    $('actWhy').textContent=j&&j.reason==='expired'?'انتهى اشتراكك. جدّد بكود جديد.':'حسابك مُنشأ. أدخل كود التفعيل السنوي لفتح المنصة.';
+    var cu=ni&&ni.currentUser();
+    $('actWhy').textContent=(j&&j.reason==='expired'?'انتهى اشتراكك. جدّد بكود جديد.':'حسابك مُنشأ. أدخل كود التفعيل السنوي لفتح المنصة.')+(cu&&cu.email?'\nالحساب الحالي: '+cu.email+' — إن كنتِ المسؤولة فاضغطي «تشخيص حسابي».':'');
     $('payInfo').textContent=payText(lastPay);
     act.hidden=false;outRow.hidden=false;say('');
   }
@@ -273,6 +275,20 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
   $('btnLogin').addEventListener('click',function(){ni.open('login')});
   $('btnSignup').addEventListener('click',function(){openReg('signup')});
   $('btnOut').addEventListener('click',function(){ni.logout()});
+  $('btnWho').addEventListener('click',async function(){
+    var o=$('whoOut');o.hidden=false;o.textContent='جارٍ الفحص…';
+    try{
+      var u=ni.currentUser(),tok=u?await u.jwt():'';
+      var r=await fetch('/.netlify/functions/health?who=1',{headers:tok?{Authorization:'Bearer '+tok}:{},cache:'no-store'});
+      var j=await r.json(),L=[];
+      L.push('الخادم: '+(j.ok?'سليم':'فيه مشكلة'));
+      if(j.checks){L.push('التخزين Blobs: '+(j.checks.blobs&&j.checks.blobs.ok?'يعمل':'لا يعمل — '+((j.checks.blobs&&j.checks.blobs.error)||'')));L.push('Identity: '+(j.checks.identity&&j.checks.identity.ok?'مفعّل':'غير مفعّل أو لا يُرى — '+((j.checks.identity&&j.checks.identity.status)||'')))}
+      if(j.env)L.push('ADMIN_EMAILS مضبوط: '+(j.env.ADMIN_EMAILS?'نعم':'لا'));
+      if(j.who){L.push('');if(j.who.email)L.push('بريد حسابك كما يراه Identity: '+j.who.email);if(j.who.loggedIn){L.push('أنتِ مسؤولة: '+(j.who.isAdmin?'نعم':'لا'));L.push('عدد بريد المسؤولين المضبوط: '+j.who.adminEmailsConfigured);L.push('اشتراكك: '+(j.who.subscription?(j.who.subscription.role+(j.who.subscription.expired?' (منتهٍ)':' (ساري)')):'لا يوجد'))}
+        L.push('→ '+j.who.hint)}
+      o.textContent=L.join('\n');
+    }catch(e){o.textContent='تعذّر الاتصال بدالة الفحص health. تأكدي أنها منشورة (افتحي /.netlify/functions/health في المتصفح).'}
+  });
   window.addEventListener('message',function(e){
     if(e.source===app.contentWindow&&e.data&&e.data.svt==='logout')ni.logout();
   });
