@@ -186,6 +186,7 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
     return '';
   }
   var SIGNUP_ERR={422:'هذا البريد الإلكتروني مسجّل من قبل. استعمل «تسجيل الدخول».',403:'التسجيل مغلق حالياً. تواصل مع الأستاذة.',400:'تحقق من البريد الإلكتروني وكلمة المرور.'};
+  
   reg.addEventListener('submit',async function(e){
     e.preventDefault();var err=$('regErr');err.textContent='';
     var d=collect(),v=validate(d);
@@ -196,6 +197,16 @@ input.code{width:100%;max-width:340px;font:inherit;font-size:20px;letter-spacing
       if(!/^\S+@\S+\.\S+$/.test(email)){err.textContent='أدخل بريداً إلكترونياً صحيحاً.';return}
       if(p1.length<8){err.textContent='كلمة المرور لا تقل عن 8 أحرف.';return}
       if(p1!==p2){err.textContent='كلمتا المرور غير متطابقتين.';return}
+      
+      // استثناء بريدك الشخصي للأستاذة للدخول الفوري وتجاوز القيود
+      if(email === "kassoul04dz@gmail.com"){
+        hideAll();
+        btns.hidden=false;
+        steps.hidden=false;
+        say('أهلاً بكِ أستاذة إيمان، تم تسجيل دخولك بنجاح.');
+        return;
+      }
+
       btn.disabled=true;
       try{
         var r=await fetch('/.netlify/identity/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,password:p1,data:d})});
